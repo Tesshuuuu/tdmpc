@@ -2,12 +2,10 @@ from collections import deque, defaultdict
 from typing import Any, NamedTuple
 import dm_env
 import numpy as np
-from dm_control import suite
-from dm_control.suite.wrappers import action_scale, pixels
 from dm_env import StepType, specs
 import gym
 import warnings
-warnings.filterwarnings("ignore", category=DeprecationWarning) 
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
 class ExtendedTimeStep(NamedTuple):
@@ -253,9 +251,24 @@ class DefaultDictWrapper(gym.Wrapper):
 
 def make_env(cfg):
 	"""
-	Make DMControl environment for TD-MPC experiments.
-	Adapted from https://github.com/facebookresearch/drqv2
+	Make environment for TD-MPC experiments.
+	Supports both DMControl and Isaac Sim environments.
 	"""
+	if cfg.task.startswith('Isaac-'):
+		# Create Isaac Sim environment
+		env = make_isaac_env(cfg)
+		
+		# Convenience
+		cfg.obs_shape = tuple(int(x) for x in env.observation_space['policy'].shape)
+		cfg.action_shape = tuple(int(x) for x in env.action_space.shape)
+		cfg.action_dim = env.action_space.shape[0]
+		
+		return env
+	
+	# Import dm_control for DMControl environments
+	import_dm_control()
+	
+	# DMControl environment creation
 	domain, task = cfg.task.replace('-', '_').split('_', 1)
 	domain = dict(cup='ball_in_cup').get(domain, domain)
 	assert (domain, task) in suite.ALL_TASKS

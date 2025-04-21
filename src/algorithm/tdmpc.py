@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from copy import deepcopy
-import algorithm.helper as h
+import tdmpc.src.algorithm.helper as h
 
 
 class TOLD(nn.Module):
